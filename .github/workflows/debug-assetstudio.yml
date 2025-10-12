@@ -1,4 +1,4 @@
-name: Debug AssetStudio CLI (tmp test)
+name: Debug AssetStudio CLI (Fixed CABMap Path)
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      # 1️⃣ Checkout repo
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -25,7 +25,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y unzip wget libgdiplus python3
 
-      # 4️⃣ Extract AssetStudio
+      # 4️⃣ Extract AssetStudio.zip
       - name: Extract AssetStudio
         run: |
           if [ ! -f "AssetStudio.zip" ]; then
@@ -70,17 +70,22 @@ jobs:
 
           echo "=== Build CABMap ==="
           dotnet "$GITHUB_WORKSPACE/AssetStudio/AssetStudio.CLI.dll" apk_unzipped/assets /tmp/fftest/out \
-            --map_op CABMap --map_name ff_cliCabMap --game Normal --silent || true
+            --map_op CABMap \
+            --map_name /tmp/fftest/out/ff_cliCabMap \
+            --game Normal --silent || true
 
           echo "=== Extract Assets ==="
           dotnet "$GITHUB_WORKSPACE/AssetStudio/AssetStudio.CLI.dll" apk_unzipped/assets /tmp/fftest/out \
-            --map_op Load --map_name ff_cliCabMap --game Normal \
-            --types Texture2D,Sprite,Mesh,AudioClip --group_assets ByType --silent || true
+            --map_op Load \
+            --map_name /tmp/fftest/out/ff_cliCabMap \
+            --game Normal \
+            --types Texture2D,Sprite,Mesh,AudioClip \
+            --group_assets ByType --silent || true
 
           echo "=== List Output Files ==="
           find /tmp/fftest/out -maxdepth 3 -type f -print | sed -n '1,200p'
 
-      # 6️⃣ CLI Info
+      # 6️⃣ CLI Help Info
       - name: CLI Help Info
         run: |
           echo "=== CLI HELP ==="
