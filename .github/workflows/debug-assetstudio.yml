@@ -1,4 +1,4 @@
-name: Debug AssetStudio CLI (Clean Fixed)
+name: Debug AssetStudio CLI (tmp test)
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      # 1️⃣ Checkout repository
+      # 1️⃣ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -25,7 +25,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y unzip wget libgdiplus python3
 
-      # 4️⃣ Extract AssetStudio.zip
+      # 4️⃣ Extract AssetStudio
       - name: Extract AssetStudio
         run: |
           if [ ! -f "AssetStudio.zip" ]; then
@@ -36,13 +36,14 @@ jobs:
           echo "✅ AssetStudio.zip berhasil diekstrak!"
           ls -R AssetStudio | head -n 50
 
-      # 5️⃣ Jalankan Tes AssetStudio CLI
+      # 5️⃣ Jalankan test extract di /tmp/fftest
       - name: Run AssetStudio CLI Test
         run: |
-          echo "=== Download APK Free Fire Advance (Tenang Mode) ==="
+          echo "=== Buat folder kerja /tmp/fftest ==="
           mkdir -p /tmp/fftest/out
           cd /tmp/fftest
-          
+
+          echo "=== Download APK Free Fire Advance ==="
           echo "📥 Mulai download..."
           wget -q -O input.apk "https://freefiremobile-a.akamaihd.net/advance/package/FFadv_66.51.0_0929_ID_goffadv1.apk"
           RC=$?
@@ -68,18 +69,18 @@ jobs:
           python3 count.py
 
           echo "=== Build CABMap ==="
-          dotnet ../AssetStudio/AssetStudio.CLI.dll apk_unzipped/assets /tmp/fftest/out \
+          dotnet "$GITHUB_WORKSPACE/AssetStudio/AssetStudio.CLI.dll" apk_unzipped/assets /tmp/fftest/out \
             --map_op CABMap --map_name ff_cliCabMap --game Normal --silent || true
 
           echo "=== Extract Assets ==="
-          dotnet ../AssetStudio/AssetStudio.CLI.dll apk_unzipped/assets /tmp/fftest/out \
+          dotnet "$GITHUB_WORKSPACE/AssetStudio/AssetStudio.CLI.dll" apk_unzipped/assets /tmp/fftest/out \
             --map_op Load --map_name ff_cliCabMap --game Normal \
             --types Texture2D,Sprite,Mesh,AudioClip --group_assets ByType --silent || true
 
           echo "=== List Output Files ==="
           find /tmp/fftest/out -maxdepth 3 -type f -print | sed -n '1,200p'
 
-      # 6️⃣ CLI Help Info
+      # 6️⃣ CLI Info
       - name: CLI Help Info
         run: |
           echo "=== CLI HELP ==="
