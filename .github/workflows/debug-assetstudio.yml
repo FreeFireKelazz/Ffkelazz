@@ -1,4 +1,4 @@
-name: Debug AssetStudio CLI (Clean Log)
+name: Debug AssetStudio CLI (Clean Fixed)
 
 on:
   workflow_dispatch:
@@ -9,19 +9,23 @@ jobs:
     timeout-minutes: 30
 
     steps:
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup .NET 8
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
+      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y unzip wget libgdiplus python3
 
+      # 4️⃣ Extract AssetStudio.zip
       - name: Extract AssetStudio
         run: |
           if [ ! -f "AssetStudio.zip" ]; then
@@ -32,20 +36,22 @@ jobs:
           echo "✅ AssetStudio.zip berhasil diekstrak!"
           ls -R AssetStudio | head -n 50
 
+      # 5️⃣ Jalankan Tes AssetStudio CLI
       - name: Run AssetStudio CLI Test
         run: |
           echo "=== Download APK Free Fire Advance (Tenang Mode) ==="
           mkdir -p /tmp/fftest/out
           cd /tmp/fftest
           
-          # download tanpa spam log
-          wget -q --show-progress=dot:giga -O input.apk \
-            "https://freefiremobile-a.akamaihd.net/advance/package/FFadv_66.51.0_0929_ID_goffadv1.apk" || {
+          echo "📥 Mulai download..."
+          wget -q -O input.apk "https://freefiremobile-a.akamaihd.net/advance/package/FFadv_66.51.0_0929_ID_goffadv1.apk"
+          RC=$?
+          if [ $RC -ne 0 ]; then
             echo "❌ Gagal download APK!"
             exit 1
-          }
+          fi
 
-          echo "✅ Download APK selesai!"
+          echo "✅ Download APK selesai ($(du -h input.apk | cut -f1))"
           unzip -q input.apk -d apk_unzipped
 
           echo "=== Folder Check ==="
@@ -73,6 +79,7 @@ jobs:
           echo "=== List Output Files ==="
           find /tmp/fftest/out -maxdepth 3 -type f -print | sed -n '1,200p'
 
+      # 6️⃣ CLI Help Info
       - name: CLI Help Info
         run: |
           echo "=== CLI HELP ==="
