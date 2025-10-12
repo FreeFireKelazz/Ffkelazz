@@ -9,29 +9,29 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      # 1️⃣ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup .NET 8
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      # 3️⃣ Install dependencies
-      - name: Install native dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgdiplus libgtk-3-0 unzip wget
+          sudo apt-get install -y unzip wget libgdiplus python3
 
-      # 4️⃣ Extract AssetStudio.zip (pastikan file ini ada di repo)
       - name: Extract AssetStudio
         run: |
-          unzip AssetStudio.zip -d AssetStudio
-          ls -R AssetStudio | head -n 100
+          if [ ! -f "AssetStudio.zip" ]; then
+            echo "❌ AssetStudio.zip tidak ditemukan di repo!"
+            exit 1
+          fi
+          unzip -q AssetStudio.zip -d AssetStudio
+          echo "✅ AssetStudio.zip berhasil diekstrak!"
+          ls -R AssetStudio | head -n 50
 
-      # 5️⃣ Jalankan tes AssetStudio CLI
       - name: Run AssetStudio CLI Test
         run: |
           echo "=== Download APK Free Fire Advance ==="
@@ -46,13 +46,11 @@ jobs:
           ls -la apk_unzipped/assets/bin/Data || true
 
           echo "=== File Count ==="
-          cat <<'PY' > count.py
-from pathlib import Path
-p = Path("apk_unzipped")
-for cand in [p / "assets" / "bin" / "Data", p / "assets", p]:
-    if cand.exists():
-        print("CAND:", cand, "files:", sum(1 for _ in cand.rglob("*")))
-PY
+          echo "from pathlib import Path" > count.py
+          echo "p = Path('apk_unzipped')" >> count.py
+          echo "for cand in [p / 'assets' / 'bin' / 'Data', p / 'assets', p]:" >> count.py
+          echo "    if cand.exists():" >> count.py
+          echo "        print('CAND:', cand, 'files:', sum(1 for _ in cand.rglob('*')))" >> count.py
           python3 count.py
 
           echo "=== Build CABMap ==="
@@ -66,3 +64,8 @@ PY
 
           echo "=== List Output Files ==="
           find /tmp/fftest/out -maxdepth 3 -type f -print | sed -n '1,200p'
+
+      - name: CLI Help Info
+        run: |
+          echo "=== CLI HELP ==="
+          dotnet AssetStudio/AssetStudio.CLI.dll --help || true
