@@ -1,4 +1,4 @@
-name: Debug AssetStudio CLI (Fixed CABMap Path)
+name: Debug AssetStudio CLI (AssetMap Fix)
 
 on:
   workflow_dispatch:
@@ -68,16 +68,17 @@ jobs:
           echo "        print('CAND:', cand, 'files:', sum(1 for _ in cand.rglob('*')))" >> count.py
           python3 count.py
 
-          echo "=== Build CABMap ==="
+          echo "=== Build AssetMap ==="
           dotnet "$GITHUB_WORKSPACE/AssetStudio/AssetStudio.CLI.dll" apk_unzipped/assets /tmp/fftest/out \
-            --map_op CABMap \
-            --map_name /tmp/fftest/out/ff_cliCabMap \
+            --map_op AssetMap \
+            --map_name ff_cliMap \
+            --map_type XML \
             --game Normal --silent || true
 
           echo "=== Extract Assets ==="
           dotnet "$GITHUB_WORKSPACE/AssetStudio/AssetStudio.CLI.dll" apk_unzipped/assets /tmp/fftest/out \
             --map_op Load \
-            --map_name /tmp/fftest/out/ff_cliCabMap \
+            --map_name ff_cliMap \
             --game Normal \
             --types Texture2D,Sprite,Mesh,AudioClip \
             --group_assets ByType --silent || true
