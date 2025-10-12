@@ -1,4 +1,4 @@
-name: Debug AssetStudio CLI
+name: Debug AssetStudio CLI (Clean Log)
 
 on:
   workflow_dispatch:
@@ -34,10 +34,18 @@ jobs:
 
       - name: Run AssetStudio CLI Test
         run: |
-          echo "=== Download APK Free Fire Advance ==="
+          echo "=== Download APK Free Fire Advance (Tenang Mode) ==="
           mkdir -p /tmp/fftest/out
           cd /tmp/fftest
-          wget -O input.apk "https://freefiremobile-a.akamaihd.net/advance/package/FFadv_66.51.0_0929_ID_goffadv1.apk"
+          
+          # download tanpa spam log
+          wget -q --show-progress=dot:giga -O input.apk \
+            "https://freefiremobile-a.akamaihd.net/advance/package/FFadv_66.51.0_0929_ID_goffadv1.apk" || {
+            echo "❌ Gagal download APK!"
+            exit 1
+          }
+
+          echo "✅ Download APK selesai!"
           unzip -q input.apk -d apk_unzipped
 
           echo "=== Folder Check ==="
