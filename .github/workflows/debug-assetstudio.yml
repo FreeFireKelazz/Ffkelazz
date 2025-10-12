@@ -9,71 +9,64 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      # =======================
-      # 1️⃣ Checkout repo
-      # =======================
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # =======================
-      # 2️⃣ Setup .NET 8
-      # =======================
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
 
-      # =======================
-      # 3️⃣ Install dependencies
-      # =======================
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y unzip wget libgdiplus
+          sudo apt-get install -y unzip wget libgdiplus python3
 
-      # =======================
-      # 4️⃣ Extract AssetStudio
-      # =======================
       - name: Extract AssetStudio
         run: |
-          unzip AssetStudio.zip -d AssetStudio
+          if [ ! -f "AssetStudio.zip" ]; then
+            echo "❌ File AssetStudio.zip tidak ditemukan di repo!"
+            exit 1
+          fi
+          unzip -q AssetStudio.zip -d AssetStudio
+          echo "✅ AssetStudio.zip berhasil diekstrak!"
           ls -R AssetStudio
 
-      # =======================
-      # 5️⃣ Run AssetStudio test
-      # =======================
       - name: Run AssetStudio CLI Test
+        shell: bash
         run: |
           echo "=== Download APK Free Fire Advance ==="
           mkdir -p /tmp/fftest/out
           cd /tmp/fftest
           wget -O input.apk "https://freefiremobile-a.akamaihd.net/advance/package/FFadv_66.51.0_0929_ID_goffadv1.apk"
           unzip -q input.apk -d apk_unzipped
+
           echo "=== Folder Check ==="
           ls -la apk_unzipped/assets || true
           ls -la apk_unzipped/assets/bin || true
           ls -la apk_unzipped/assets/bin/Data || true
 
           echo "=== File Count ==="
-          python - <<'PY'
-          from pathlib import Path
-          p = Path("apk_unzipped")
-          for cand in [p / "assets" / "bin" / "Data", p / "assets", p]:
-          if cand.exists():
-          print("CAND:", cand, "files:", sum(1 for _ in cand.rglob('*')))
+          python3 - <<PY
+from pathlib import Path
+p = Path("apk_unzipped")
+for cand in [p / "assets" / "bin" / "Data", p / "assets", p]:
+    if cand.exists():
+        print("CAND:", cand, "files:", sum(1 for _ in cand.rglob('*')))
 PY
 
           echo "=== Build CABMap ==="
-          dotnet AssetStudio/AssetStudio.CLI.dll apk_unzipped/assets /tmp/fftest/out --map_op CABMap --map_name ff_cliCabMap --game Normal --silent || true
+          dotnet ../AssetStudio/AssetStudio.CLI.dll apk_unzipped/assets /tmp/fftest/out \
+            --map_op CABMap --map_name ff_cliCabMap --game Normal --silent || true
+
           echo "=== Extract Assets ==="
-          dotnet AssetStudio/AssetStudio.CLI.dll apk_unzipped/assets /tmp/fftest/out --map_op Load --map_name ff_cliCabMap --game Normal --types Texture2D,Sprite,Mesh,AudioClip --group_assets ByType --silent || true
+          dotnet ../AssetStudio/AssetStudio.CLI.dll apk_unzipped/assets /tmp/fftest/out \
+            --map_op Load --map_name ff_cliCabMap --game Normal \
+            --types Texture2D,Sprite,Mesh,AudioClip --group_assets ByType --silent || true
 
           echo "=== List Output Files ==="
           find /tmp/fftest/out -maxdepth 3 -type f -print | sed -n '1,200p'
 
-      # =======================
-      # 6️⃣ Show CLI help (optional)
-      # =======================
       - name: CLI Help Info
         run: |
           echo "=== CLI HELP ==="
