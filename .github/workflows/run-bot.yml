@@ -48,12 +48,15 @@ jobs:
           unzip AssetStudio.zip -d AssetStudio
           ls -R AssetStudio
 
-      # ✅ Tambahan: optional debug AssetStudio CLI
-      - name: Debug AssetStudio CLI (optional)
+      # 🔍 Debug AssetStudio CLI
+      - name: Debug AssetStudio CLI
         run: |
+          echo "=== DOTNET INFO ==="
           dotnet --info
+          echo "=== CLI HELP ==="
           dotnet AssetStudio/AssetStudio.CLI.dll --help || true
-
+          echo "=== END OF HELP ==="
+        
       # =======================
       # 5️⃣ Install dependencies
       # =======================
