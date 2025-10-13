@@ -1,4 +1,4 @@
-name: Run Telegram Bot
+name: Menjalankan Bot LeakerID👨‍💻
 
 on:
   workflow_dispatch:
@@ -6,17 +6,11 @@ on:
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-    timeout-minutes: 30 # 30 menit
-
+    timeout-minutes: 120  # 2 Jam
+    
     steps:
       # =======================
-      # 1️⃣ Checkout repository
-      # =======================
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # =======================
-      # 2️⃣ Setup Python
+      # 1️⃣ Setup Python
       # =======================
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -24,63 +18,47 @@ jobs:
           python-version: "3.11"
 
       # =======================
-      # 3️⃣ Setup .NET 8
+      # 2️⃣ Checkout Repository
       # =======================
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # ✅ Tambahan: install native dependencies (libgdiplus & unzip)
-      - name: Install native dependencies
+      # =======================
+      # 3️⃣ Mengestrak File Bot.zip
+      # =======================
+      - name: Ekstrak File Bot.zip📁
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libgdiplus libgtk-3-0 unzip
+          unzip Bot.zip -d Bot
+          ls -R Bot
 
       # =======================
-      # 4️⃣ Extract bot files
+      # 4️⃣ Install Dependencies
       # =======================
-      - name: Extract bot files
-        run: unzip Bot.zip -d Bot
-
-      - name: Extract AssetStudio
-        run: |
-          unzip AssetStudio.zip -d AssetStudio
-          ls -R AssetStudio
-
-      # 🔍 Debug AssetStudio CLI
-      - name: Debug AssetStudio CLI
-        run: |
-          echo "=== DOTNET INFO ==="
-          dotnet --info
-          echo "=== CLI HELP ==="
-          dotnet AssetStudio/AssetStudio.CLI.dll --help || true
-          echo "=== END OF HELP ==="
-        
-      # =======================
-      # 5️⃣ Install dependencies
-      # =======================
-      - name: Install Python dependencies
+      - name: Menginstal Python Dependencies🔗
         run: |
           python -m pip install --upgrade pip
           pip install -r Bot/requirements.txt
 
       # =======================
-      # 6️⃣ Jalankan bot Telegram
+      # 5️⃣ Jalankan bot Telegram
       # =======================
-      - name: Run Telegram Bot
+      - name: Menjalankan Bot Telegram
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          SHUTDOWN_TIME: ${{ secrets.SHUTDOWN_TIME || '300' }}
         run: |
-          echo "🤖 Starting Telegram bot..."
+          echo "🤖 Memulai Bot Telegram..."
           cd Bot
           python bot.py
 
       # =======================
-      # 7️⃣ Bersihkan cache sementara
+      # 6️⃣ Bersihkan file sementara
       # =======================
-      - name: Clean up temporary files
+      - name: Membersihkan File
         if: always()
         run: |
-          echo "🧹 Cleaning up..."
-          rm -rf __pycache__ Bot/__pycache__ AssetStudio/__pycache__
+          echo "🧹 Membersihkan..."
+          rm -rf pycache
+          rm -rf *.zip
+          rm -rf tmp/
+          rm -rf assets/
